@@ -13,7 +13,7 @@ let appendUrlPara = (url,value) => {
       return url += '&'+value;
   }
 };
-/*快速排序-升序
+/*数组快速排序-升序
 * @pivot 基准值，默认为第一个
 * @rest 除基准值以外的值的数组。
 * Usage: quickSortAsc([2331])
@@ -28,7 +28,7 @@ let quickSortAsc = (arr) =>{
         ...quickSortAsc(rest.filter(x=>x>=pivot))
     ]
 };
-/*快速排序-降序
+/*数组快速排序-降序
  * @pivot 基准值，默认为第一个
  * @rest 除基准值以外的值的数组。
  * Usage: quickSortDesc([2331])
@@ -41,6 +41,36 @@ let quickSortDesc = (arr) =>{
         ...quickSortDesc(rest.filter(x=>x>pivot)),
         pivot,
         ...quickSortDesc(rest.filter(x=>x<=pivot))
+    ]
+};
+/*对象属性值-快速排序-升序
+ * @arr 数组对象
+ * @key 属性名
+ * Usage: quickSortObjDesc([{a:2},{a:1},{a:3}],'a'))
+ * Result:: [{"a":1},{"a":2},{"a":3}]
+ * */
+let quickSortObjAsc = (arr,key) =>{
+    if(!arr.length){return []}
+    let[pivot,...rest] = arr;
+    return [
+        ...quickSortDesc(rest.filter(x=>x[key]<pivot[key]),key),
+        pivot,
+        ...quickSortDesc(rest.filter(x=>x[key]>=pivot[key]),key)
+    ]
+};
+/*对象属性值-快速排序-降序
+* @arr 数组对象
+* @key 属性名
+* Usage: quickSortObjDesc([{a:2},{a:1},{a:3}],'a'))
+* Result:: [{"a":3},{"a":2},{"a":1}]
+* */
+let quickSortObjDesc = (arr,key) =>{
+    if(!arr.length){return []}
+    let[pivot,...rest] = arr;
+    return [
+        ...quickSortDesc(rest.filter(x=>x[key]>pivot[key]),key),
+        pivot,
+        ...quickSortDesc(rest.filter(x=>x[key]<=pivot[key]),key)
     ]
 };
 /*一维数组合并去重,
@@ -183,8 +213,11 @@ let percentFormatted = (num,digit = 2) =>floatNumFormatted(num*100,digit) + '%';
 * Result: {key:val,key2:val2}
 * */
 let cookieGetAll = () =>{
-    let a = document.cookie.split(';');
+    let a = document.cookie.split('; ');
     let c = {};
+    if(a.length<1){
+        return null
+    }
     for(let i=0;i<a.length;i++){
         let d = a[i].substring(0,a[i].indexOf('='));
         c[d] = a[i].substring(a[i].indexOf('=') + 1,a[i].length);
@@ -206,21 +239,55 @@ let cookieGetExact = (key) =>cookieGetAll()[key];
 let cookieSet = (key,val,day = 30) =>{
     let data = new Date();
     data.setTime(data.getTime() + day * 24 * 60 *60 *1000);
-    document.cookie = key + '=' + val + ';path=/;expires=' + data ;
+    document.cookie = key + '=' + val + ';expires=' + data.toUTCString();
 };
+/*cookie删除
+* @keys 键名，支持输入多个，批量删除
+* Usage: cookieSet('userName')
+* */
 let cookieDeleteExact = (...keys) =>{
-    // debugger
-    let data = new Date();
-
     for(let key of keys){
         let val = cookieGetExact(key);
-        log(val);
-        // data.setTime(data.getTime()-1);
-        // document.cookie = key + '=' + val + ';path=/;expires=' + data ;
+        let data = new Date();
+        data.setTime(data.getTime()-1);
+        document.cookie = key + '=' + val + ';expires=' + data.toUTCString();
     }
 };
-// log(cookieGetAll());
-// cookieSet('eee','321');
-// log(cookieGetExact('username'))
-// cookieDeleteExact('eee');
-// log(cookieGetAll());
+/*时间戳转日期
+*@time 时间戳
+* Usage timeFormatted(1503027486)
+* Result 2017-7-18-11:38:06
+* */
+let timeFormatted = (time)=>{
+    time = Number.parseInt(time);
+    time = new Date(time*1000);
+    let [year,month,Data] = [time.getFullYear(),time.getMonth(),time.getDate()];
+    let [hour,minute,second] = [time.getHours(),time.getMinutes(),time.getSeconds()].map(x => {
+        if(x<10){
+            return '0' + x;
+        }else{
+            return x
+        }
+    });
+    return year + '-' + month + '-' + Data + '-' + hour+ ':' + minute + ':' + second;
+};
+/*时间戳之差，返回天，时，分，或秒
+*@v1,@v2时间戳，顺序可以互换
+*@unit 单位，可取值为d,h,m,s 对应天，时，分，秒。默认为秒。
+* Usage getDiffStamp(1502854686,1503027486,'d');
+* Result 2
+* */
+let getDiffStamp = (v1,v2,unit = 's')=>{
+    [v1,v2] = [new Date(parseInt(v1)*1000),new Date(parseInt(v2)*1000)];
+    let a = {};
+    a.s = Math.abs(v1 - v2);
+    a.d = a.s/(1000 * 60 * 60 * 24);
+    a.h = a.d * 24;
+    a.m = a.d * 24 * 60;
+    return a[unit]
+};
+/*提取文件后缀名
+* @name 文件名
+* Usage getSuffix('123.html')
+* Result html
+* */
