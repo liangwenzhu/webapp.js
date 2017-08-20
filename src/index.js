@@ -78,18 +78,15 @@ let quickSortObjDesc = (arr,key) =>{
 * @arr 数组，可多填
 * Usage: unique('asc',[2331],[43])
 * Result [1234]
+* 字符串和数字之间不重复，'5'和5不重复
 * */
 let unique = (order = 'default',...arr) => {
-    let a = [];
+    let a;
     let c = [];
     for(let b=0;b<arr.length;b++){
         c.push(...arr[b]);
     }
-    for(let i=0;i<c.length;i++){
-        if(!a.includes(c[i])){
-            a.push(c[i]);
-        }
-    }
+    a = Array.of(...new Set(c));
     switch (order){
         case 'asc':
             a = quickSortAsc(a);
@@ -102,6 +99,7 @@ let unique = (order = 'default',...arr) => {
     }
     return a;
 };
+
 /*url中取参
 * 返回一个JSON对象
 * */
@@ -279,7 +277,7 @@ let timeFormatted = (time)=>{
 * */
 let getDiffStamp = (v1,v2,unit = 's')=>{
     [v1,v2] = [new Date(parseInt(v1)*1000),new Date(parseInt(v2)*1000)];
-    let a = {};
+    const a = {};
     a.s = Math.abs(v1 - v2);
     a.d = a.s/(1000 * 60 * 60 * 24);
     a.h = a.d * 24;
@@ -291,3 +289,25 @@ let getDiffStamp = (v1,v2,unit = 's')=>{
 * Usage getSuffix('123.html')
 * Result html
 * */
+let getSuffix =(x)=> x.split('.').pop();
+
+/*输入负数从后面读取数组数据
+* @elements 数组
+* Usage: let a = reArrayGet(['a','b','c']);a[-1]
+* Result: c
+* 把数组放进去就可，吐出来的数组就可以拥有这个特性。
+* */
+function reArrayGet(elements){
+    let handler = {
+        get(target,propKey){
+            let index = Number(propKey);
+            if(index<0){
+                propKey = String(target.length + index);
+            }
+            return Reflect.get(target,propKey);//获取数组默认行为
+        }
+    };
+    return new Proxy(elements,handler)
+}
+
+
